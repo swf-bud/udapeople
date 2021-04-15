@@ -335,10 +335,8 @@ jobs:
             grep "has been executed successfully" ~/migrationresults.txt
             export MIGRATION_STATUS=$?
             curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" \
-              --request PUT --data "${MIGRATION_STATUS}" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7} \
-            [ $(curl -H "token: ${MEMSTASH_TOKEN}" \
-              --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}) == "0" ] && \
-              echo "Migration: successful"||echo "Migration: failed"
+              --request PUT --data "${MIGRATION_STATUS}" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+            exit ${MIGRATION_STATUS}
       - slack/notify:
           event: fail
           template: basic_fail_1
