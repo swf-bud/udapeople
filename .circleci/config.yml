@@ -60,11 +60,11 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl -H "token: ${MEMSTASH_TOKEN}" \
-              --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7})
-            if (( $SUCCESS==0 )); then
+            export SUCCESS=$(curl -H "token: ${MEMSTASH_TOKEN}" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            if (( $SUCCESS=="success" )); then
               cd ~/project/backend
               npm install
+              npm run build
               npm run migrations:revert
             fi
     
@@ -191,27 +191,6 @@ jobs:
           event: pass
           template: basic_success_1
 
-  # what-the-junk:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: no really, what the JUNK?!?!?!?!
-  #         command: |
-  #           echo "Current folder = $(pwd)"
-  #           echo "Working folder = ${CIRCLE_WORKING_DIRECTORY}"
-  #           ls -lah
-  #           ls -lah -R
-  #           ls -lah ${CIRCLE_WORKING_DIRECTORY}/.circleci/ansible/roles/deploy/files/
-  #           exit 1
-  #     - slack/notify:
-  #         event: fail
-  #         template: basic_fail_1
-  #     - slack/notify:
-  #         event: pass
-  #         template: basic_success_1
-
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -332,11 +311,14 @@ jobs:
       - run:
           name: Send migration results to memstash
           command: |
-            grep "has been executed successfully" ~/migrationresults.txt
-            export MIGRATION_STATUS=$?
-            curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" \
-              --request PUT --data "${MIGRATION_STATUS}" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
-            exit ${MIGRATION_STATUS}
+            cat ~/migrationresults.txt
+            if ( grep "has been executed successfully" ~/migrationresults.txt ); then
+            export MIGRATION_STATUS=success
+            else
+            export MIGRATION_STATUS=fail
+            fi
+            echo "Migration status = ${MIGRATION_STATUS}"
+            curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" --request PUT --data "${MIGRATION_STATUS}" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
       - slack/notify:
           event: fail
           template: basic_fail_1
