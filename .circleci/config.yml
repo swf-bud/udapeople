@@ -391,8 +391,6 @@ jobs:
             cd backend
             npm i
             npm run build
-            cd dist
-            echo "dist folder location = $(pwd)"
             zip -r backend.zip .
             cp ./backend.zip ~/project/.circleci/ansible/roles/deploy/files/backend.zip
             ansible-playbook -vv ~/project/.circleci/ansible/deploy-backend.yml -i ~/persisted/inventory.txt

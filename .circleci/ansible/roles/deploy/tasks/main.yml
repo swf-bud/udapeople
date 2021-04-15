@@ -12,4 +12,4 @@
   shell: cd ~/backend && unzip backend.zip
 
 - name: start backend service
-  shell: "pm2 start ~/backend/main.js -f"
+  shell: "pm2 start npm -- run start"
