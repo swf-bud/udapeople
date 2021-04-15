@@ -1,0 +1,36 @@
+---
+- name: "configuration play." 
+  hosts: web
+  user: ubuntu
+  gather_facts: false
+  vars:
+    - ansible_python_interpreter: /usr/bin/python3
+    - ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+    - ansible_stdout_callback: yaml
+  # environment:
+  #   ENVIRONMENT: "{{ lookup('env', 'ENVIRONMENT') }}"
+  #   TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
+  #   TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES') }}"
+  #   TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
+  #   TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
+  #   TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
+  #   TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
+  #   TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
+
+  pre_tasks:
+    # - pause:
+    #     prompt: "Waiting for EC2. Press Enter to continue"
+    - name: "wait up to 600 seconds for target connection to become reachable/usable."
+      local_action: command ssh ubuntu@{{ inventory_hostname }} -o StrictHostKeyChecking=no
+      register: result
+      until: result is success
+      retries: 20
+      delay: 30
+
+    # - name: "install python for Ansible."
+      # become: yes
+      # apt:
+      #   name: ['python3']
+
+  roles:
+    - configure-server

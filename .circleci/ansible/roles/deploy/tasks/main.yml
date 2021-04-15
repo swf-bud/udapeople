@@ -1,0 +1,15 @@
+---
+- name: create backend folder
+  file:
+    path: ~/backend
+    state: directory
+
+- copy:
+    src: backend.zip
+    dest: ~/backend/backend.zip
+
+- name: extract files
+  shell: cd ~/backend && unzip backend.zip
+
+- name: start backend service
+  shell: "pm2 start ~/backend/main.js -f"
