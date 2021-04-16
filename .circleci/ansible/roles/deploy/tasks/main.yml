@@ -13,3 +13,10 @@
 
 - name: start backend service
   shell: "cd ~/backend && pm2 start npm -- run start"
+
+- name: Pause 2 minutes
+  pause:
+    minutes: 2
+
+- name: Get PM2 logs
+  shell: pm2 logs --lines 1000
