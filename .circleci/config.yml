@@ -69,24 +69,24 @@ commands:
               npm run migrations:revert
             fi
     
-  aws-cli-install-amazonlinux:
-    description: Install the AWS-CLI Tools In AmazonLinux image
-    steps:
-      - run:
-          command: |
-            yum install -y unzip
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            cd aws && ./install
+  # aws-cli-install-amazonlinux:
+  #   description: Install the AWS-CLI Tools In AmazonLinux image
+  #   steps:
+  #     - run:
+  #         command: |
+  #           yum install -y unzip
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           cd aws && ./install
 
-  aws-cli-install-circleci-node:
-    description: Install the AWS-CLI Tools In CircleCI-Node image
-    steps:
-      - run:
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$HOME/awscliv2.zip"
-            cd $HOME && unzip awscliv2.zip
-            cd $HOME/aws && sudo ./install
+  # aws-cli-install-circleci-node:
+  #   description: Install the AWS-CLI Tools In CircleCI-Node image
+  #   steps:
+  #     - run:
+  #         command: |
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$HOME/awscliv2.zip"
+  #           cd $HOME && unzip awscliv2.zip
+  #           cd $HOME/aws && sudo ./install
 
 jobs:
   build-frontend:
@@ -417,11 +417,11 @@ jobs:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
       - attach_workspace:
           at: ~/
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt install -y curl jq python3-pip zip
-            sudo pip3 install ansible==2.9.19
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       sudo apt install -y curl jq python3-pip zip
+      #       sudo pip3 install ansible==2.9.19
       - run:
           name: Zip backend and send to server
           command: |
