@@ -589,19 +589,19 @@ workflows:
           context:
             - Slack
             - AWSCLI
-      # - smoke-test:
-      #     requires: 
-      #       - deploy-backend
-      #       - deploy-frontend
-      #     context:
-      #       - Slack
-      #       - AWSCLI
-      # - cloudfront-update:
-      #     requires: 
-      #       - smoke-test
-      #     context:
-      #       - Slack
-      #       - AWSCLI
+      - smoke-test:
+          requires: 
+            - deploy-backend
+            - deploy-frontend
+          context:
+            - Slack
+            - AWSCLI
+      - cloudfront-update:
+          requires: 
+            - smoke-test
+          context:
+            - Slack
+            - AWSCLI
       # - cleanup:
       #     requires: 
       #       - cloudfront-update
@@ -623,8 +623,8 @@ workflows:
             - run-migrations
             - deploy-frontend
             - deploy-backend
-            # - smoke-test
-            # - cloudfront-update
+            - smoke-test
+            - cloudfront-update
             # - cleanup
           post-steps:
             - slack/notify:
