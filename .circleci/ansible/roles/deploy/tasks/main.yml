@@ -4,19 +4,21 @@
     path: ~/backend
     state: directory
 
-- copy:
+- unarchive:
     src: backend.zip
-    dest: ~/backend/backend.zip
+    dest: ~/backend
 
-- name: extract files
-  shell: cd ~/backend && unzip backend.zip
+- name: npm install
+  command: npm i
+  args:
+    chdir: /home/ubuntu/backend
 
+- name: npm run build
+  command: npm run build
+  args:
+    chdir: /home/ubuntu/backend
+    
 - name: start backend service
-  shell: "cd ~/backend && pm2 start npm -- run start"
-
-- name: Pause 2 minutes
-  pause:
-    minutes: 2
-
-- name: Get PM2 logs
-  shell: pm2 logs --lines 1000
+  shell: "pm2 start npm -- run start:prod"
+  args:
+    chdir: /home/ubuntu/backend

@@ -386,11 +386,9 @@ jobs:
             sudo apt install -y curl jq python3-pip zip
             sudo pip3 install ansible==2.9.19
       - run:
-          name: Compile backend
+          name: Zip backend and send to server
           command: |
             cd backend
-            npm i
-            npm run build
             zip -r backend.zip .
             cp ./backend.zip ~/project/.circleci/ansible/roles/deploy/files/backend.zip
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -vv ~/project/.circleci/ansible/deploy-backend.yml -i ~/persisted/inventory.txt
@@ -411,6 +409,7 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
+      - checkout
       - run:
           name: Install dependencies
           command: |
@@ -550,13 +549,8 @@ workflows:
       #     context:
       #       - Slack
       #     <<: *slack-fail-post-step
-      # - what-the-junk:
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
       - deploy-infrastructure:
           # requires:
-          #   - what-the-junk
           #   - test-frontend
           #   - test-backend
           #   - scan-frontend

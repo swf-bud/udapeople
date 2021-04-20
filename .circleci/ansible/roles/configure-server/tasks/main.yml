@@ -13,7 +13,7 @@
   apt:
     upgrade: yes
 
-- name: "install unzip"
+- name: "install unzip & node"
   become: yes
   apt:
     pkg:
