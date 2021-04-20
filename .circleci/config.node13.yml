@@ -91,13 +91,9 @@ commands:
 jobs:
   build-frontend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
       - run:
@@ -118,13 +114,9 @@ jobs:
 
   build-backend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
       - run:
@@ -145,13 +137,9 @@ jobs:
 
   test-frontend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
       - run:
@@ -168,13 +156,9 @@ jobs:
 
   test-backend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
       - run:
@@ -191,13 +175,9 @@ jobs:
             
   scan-frontend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
       - run:
@@ -214,13 +194,9 @@ jobs:
 
   scan-backend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
       - run:
@@ -237,13 +213,14 @@ jobs:
 
   deploy-infrastructure:
     docker:
-      - image: alpine:3.12
+      - image: amazonlinux
     steps:
       - checkout
+      - aws-cli-install-amazonlinux
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            yum install -y curl jq tar gzip zip unzip
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -289,16 +266,18 @@ jobs:
 
   configure-infrastructure:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip ansible
       - add_ssh_keys:
           fingerprints:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
+      - aws-cli-install-circleci-node
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt install -y curl jq python3-pip
+            sudo pip3 install ansible==2.9.19
       - attach_workspace:
           at: ~/
       - run:
@@ -319,13 +298,10 @@ jobs:
 
   run-migrations:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+      - aws-cli-install-circleci-node
       - run:
           name: Run migrations
           command: |
@@ -359,16 +335,17 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
       - add_ssh_keys:
           fingerprints:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
+      - aws-cli-install-circleci-node
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       # your code here
       - run:
           name: Get backend url, Build, Upload
           command: |
@@ -394,18 +371,15 @@ jobs:
 
   deploy-backend:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip ansible
       - add_ssh_keys:
           fingerprints:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
       - attach_workspace:
           at: ~/
+      - aws-cli-install-circleci-node
       - run:
           name: Install dependencies
           command: |
@@ -439,7 +413,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            apk add --update curl jq aws-cli nodejs npm
       - run:
           name: Backend smoke test
           command: |
@@ -450,7 +424,10 @@ jobs:
           name: Frontend smoke test
           command: |
             export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
-            if ! ( curl -s ${URL} | grep "Welcome" ); then
+            if curl -s ${URL} | grep "Welcome"
+            then
+            return 1
+            else
             return 1
             fi
       - slack/notify:
@@ -468,13 +445,14 @@ jobs:
 
   cloudfront-update:
     docker:
-      - image: alpine:3.12
+      - image: amazonlinux
     steps:
       - checkout
+      - aws-cli-install-amazonlinux
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            yum install -y curl jq tar gzip zip unzip
       - run:
           name: Update cloudfront distribution
           command: |
@@ -499,13 +477,14 @@ jobs:
 
   cleanup:
     docker:
-      - image: alpine:3.12
+      - image: amazonlinux
     steps:
       - checkout
+      - aws-cli-install-amazonlinux
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            yum install -y curl jq tar gzip zip unzip
       - run:
           name: Get old stack workflow id
           command: |
@@ -609,25 +588,25 @@ workflows:
           context:
             - Slack
             - AWSCLI
-      - smoke-test:
-          requires: 
-            - deploy-backend
-            - deploy-frontend
-          context:
-            - Slack
-            - AWSCLI
-      - cloudfront-update:
-          requires: 
-            - smoke-test
-          context:
-            - Slack
-            - AWSCLI
-      - cleanup:
-          requires: 
-            - cloudfront-update
-          context:
-            - Slack
-            - AWSCLI
+      # - smoke-test:
+      #     requires: 
+      #       - deploy-backend
+      #       - deploy-frontend
+      #     context:
+      #       - Slack
+      #       - AWSCLI
+      # - cloudfront-update:
+      #     requires: 
+      #       - smoke-test
+      #     context:
+      #       - Slack
+      #       - AWSCLI
+      # - cleanup:
+      #     requires: 
+      #       - cloudfront-update
+      #     context:
+      #       - Slack
+      #       - AWSCLI
       - last-job:
           context:
             - Slack
@@ -643,9 +622,9 @@ workflows:
             - run-migrations
             - deploy-frontend
             - deploy-backend
-            - smoke-test
-            - cloudfront-update
-            - cleanup
+            # - smoke-test
+            # - cloudfront-update
+            # - cleanup
           post-steps:
             - slack/notify:
                 custom: |
