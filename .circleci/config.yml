@@ -97,6 +97,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
@@ -124,6 +125,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
@@ -151,6 +153,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
@@ -174,6 +177,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
@@ -197,6 +201,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [frontend-build-v2]
@@ -220,6 +225,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq nodejs npm zip unzip
       - restore_cache:
           keys: [backend-build-v2]
@@ -243,7 +249,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            apk update
+            apk add --update curl jq aws-cli nodejs npm zip unzip openssh
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -295,7 +302,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip ansible
+            apk update
+            apk add --update curl jq aws-cli nodejs npm zip unzip ansible openssh
       - add_ssh_keys:
           fingerprints:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
@@ -325,6 +333,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
           name: Run migrations
@@ -365,6 +374,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - add_ssh_keys:
           fingerprints:
@@ -400,7 +410,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli nodejs npm zip unzip ansible
+            apk update
+            apk add --update curl jq aws-cli nodejs npm zip unzip ansible openssh
       - add_ssh_keys:
           fingerprints:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
@@ -439,6 +450,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
           name: Backend smoke test
@@ -474,6 +486,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
           name: Update cloudfront distribution
@@ -505,6 +518,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
           name: Get old stack workflow id
@@ -616,18 +630,18 @@ workflows:
           context:
             - Slack
             - AWSCLI
-      - cloudfront-update:
-          requires: 
-            - smoke-test
-          context:
-            - Slack
-            - AWSCLI
-      - cleanup:
-          requires: 
-            - cloudfront-update
-          context:
-            - Slack
-            - AWSCLI
+      # - cloudfront-update:
+      #     requires: 
+      #       - smoke-test
+      #     context:
+      #       - Slack
+      #       - AWSCLI
+      # - cleanup:
+      #     requires: 
+      #       - cloudfront-update
+      #     context:
+      #       - Slack
+      #       - AWSCLI
       - last-job:
           context:
             - Slack
@@ -644,8 +658,8 @@ workflows:
             - deploy-frontend
             - deploy-backend
             - smoke-test
-            - cloudfront-update
-            - cleanup
+            # - cloudfront-update
+            # - cleanup
           post-steps:
             - slack/notify:
                 custom: |
