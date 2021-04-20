@@ -19,6 +19,6 @@
     chdir: /home/ubuntu/backend
     
 - name: start backend service
-  shell: "pm2 start npm -- run start:prod"
+  shell: "pm2 start npm -- run start"
   args:
     chdir: /home/ubuntu/backend

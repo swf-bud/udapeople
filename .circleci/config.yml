@@ -407,13 +407,14 @@ jobs:
 
   smoke-test:
     docker:
-      - image: alpine:latest
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - aws-cli-install-circleci-node
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq aws-cli
+            sudo apt install -y curl jq zip
       - run:
           name: Backend smoke test
           command: |
@@ -588,25 +589,25 @@ workflows:
           context:
             - Slack
             - AWSCLI
-      - smoke-test:
-          requires: 
-            - deploy-backend
-            - deploy-frontend
-          context:
-            - Slack
-            - AWSCLI
-      - cloudfront-update:
-          requires: 
-            - smoke-test
-          context:
-            - Slack
-            - AWSCLI
-      - cleanup:
-          requires: 
-            - cloudfront-update
-          context:
-            - Slack
-            - AWSCLI
+      # - smoke-test:
+      #     requires: 
+      #       - deploy-backend
+      #       - deploy-frontend
+      #     context:
+      #       - Slack
+      #       - AWSCLI
+      # - cloudfront-update:
+      #     requires: 
+      #       - smoke-test
+      #     context:
+      #       - Slack
+      #       - AWSCLI
+      # - cleanup:
+      #     requires: 
+      #       - cloudfront-update
+      #     context:
+      #       - Slack
+      #       - AWSCLI
       - last-job:
           context:
             - Slack
@@ -622,9 +623,9 @@ workflows:
             - run-migrations
             - deploy-frontend
             - deploy-backend
-            - smoke-test
-            - cloudfront-update
-            - cleanup
+            # - smoke-test
+            # - cloudfront-update
+            # - cleanup
           post-steps:
             - slack/notify:
                 custom: |
