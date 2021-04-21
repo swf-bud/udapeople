@@ -496,20 +496,15 @@ jobs:
           name: Install dependencies
           command: |
             apk update
-            apk add --update curl jq aws-cli nodejs npm zip unzip
+            apk add --update curl jq aws-cli nodejs npm zip unzip bash
       - run:
-          name: Get STACKS List
+          name: Get STACKS List, Old Workflow ID, & Remove old stacks and files
           command: |
+            bash
             export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
-      - run:
-          name: Retrieve Old WorkflowID
-          command: |
             export OldWorkflowID=$(curl -H "token: ${MEMSTASH_TOKEN}" \
               --request GET https://api.memstash.io/values/OldWorkflowID)
-      - run:
-          name: Remove old stacks and files
-          command: |
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
