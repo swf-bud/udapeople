@@ -52,9 +52,6 @@ commands:
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
-    # parameters:
-    #   stack:
-    #     type: string
     steps:
       - run:
           name: Revert migrations
@@ -68,25 +65,6 @@ commands:
               npm run build
               npm run migrations:revert
             fi
-    
-  # aws-cli-install-amazonlinux:
-  #   description: Install the AWS-CLI Tools In AmazonLinux image
-  #   steps:
-  #     - run:
-  #         command: |
-  #           yum install -y unzip
-  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #           unzip awscliv2.zip
-  #           cd aws && ./install
-
-  # aws-cli-install-circleci-node:
-  #   description: Install the AWS-CLI Tools In CircleCI-Node image
-  #   steps:
-  #     - run:
-  #         command: |
-  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$HOME/awscliv2.zip"
-  #           cd $HOME && unzip awscliv2.zip
-  #           cd $HOME/aws && sudo ./install
 
 jobs:
   build-frontend:
@@ -310,12 +288,9 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Configure server
+          name: Configure Backend Server
           command: |
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -vvv .circleci/ansible/configure-server.yml -i ~/persisted/inventory.txt
-      - slack/notify:
-          event: fail
-          template: basic_fail_1
       - slack/notify:
           event: pass
           template: basic_success_1
@@ -420,11 +395,6 @@ jobs:
             - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
       - attach_workspace:
           at: ~/
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       sudo apt install -y curl jq python3-pip zip
-      #       sudo pip3 install ansible==2.9.19
       - run:
           name: Zip backend and send to server
           command: |
@@ -492,15 +462,19 @@ jobs:
             apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
+          name: Find and store old stack workflow id
+          command: |
+            export OldWorkflowID=$(aws cloudformation \
+                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                --no-paginate --output text)
+            curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" --request PUT --data "${OldWorkflowID}" https://api.memstash.io/values/OldWorkflowID
+      - run:
           name: Update cloudfront distribution
           command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --tags project="udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --stack-name "udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides \
-              WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
-      - slack/notify:
+            aws cloudformation update-stack \
+              --stack-name udapeople-cloudfront --use-previous-template \
+              --parameters ParameterKey=WorkflowID,ParameterValue=${CIRCLE_WORKFLOW_ID:0:7},UsePreviousValue=false
+       - slack/notify:
           event: fail
           template: basic_fail_1
       - slack/notify:
@@ -524,13 +498,15 @@ jobs:
             apk update
             apk add --update curl jq aws-cli nodejs npm zip unzip
       - run:
-          name: Get old stack workflow id
+          name: Get STACKS List
           command: |
-            export OldWorkflowID=$(aws cloudformation \
-                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                --no-paginate --output text)
             export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
+      - run:
+          name: Retrieve Old WorkflowID
+          command: |
+            export OldWorkflowID=$(curl -H "token: ${MEMSTASH_TOKEN}" \
+              --request GET https://api.memstash.io/values/OldWorkflowID)
       - run:
           name: Remove old stacks and files
           command: |
@@ -559,40 +535,40 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend:
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-      - build-backend:
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-      - test-frontend:
-          requires: [build-frontend]
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-      - test-backend:
-          requires: [build-backend]
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-      - scan-backend:
-          requires: [build-backend]
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-      - scan-frontend:
-          requires: [build-frontend]
-          context:
-            - Slack
-          <<: *slack-fail-post-step
+      # - build-frontend:
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
+      # - build-backend:
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
+      # - test-frontend:
+      #     requires: [build-frontend]
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
+      # - test-backend:
+      #     requires: [build-backend]
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
+      # - scan-backend:
+      #     requires: [build-backend]
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
       - deploy-infrastructure:
-          requires:
-            - test-frontend
-            - test-backend
-            - scan-frontend
-            - scan-backend
+          # requires:
+            # - test-frontend
+            # - test-backend
+            # - scan-frontend
+            # - scan-backend
           context:
             - Slack
             - AWSCLI
@@ -649,12 +625,12 @@ workflows:
           context:
             - Slack
           requires:
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-backend
-            - scan-frontend
+            # - build-frontend
+            # - build-backend
+            # - test-frontend
+            # - test-backend
+            # - scan-backend
+            # - scan-frontend
             - deploy-infrastructure
             - configure-infrastructure
             - run-migrations
