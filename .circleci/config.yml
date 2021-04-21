@@ -256,8 +256,8 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project="udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --stack-name "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project="udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides \
               ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -265,14 +265,14 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project="udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --stack-name "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project="udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides \
               ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory and backend URL to memstash
           command: |
-            export EC2_BE_IP=$(aws ec2 describe-instances --filters "Name=tag:project,Values=udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].{Hostname:PublicIpAddress}' --output text)
+            export EC2_BE_IP=$(aws ec2 describe-instances --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].{Hostname:PublicIpAddress}' --output text)
             mkdir -p ~/persisted
             cp .circleci/ansible/inventory.txt ~/persisted/inventory.txt
             echo ${EC2_BE_IP} >> ~/persisted/inventory.txt
@@ -290,9 +290,9 @@ jobs:
           template: basic_success_1
       # destroy-environment commands only execute when: on_fail
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
     docker:
@@ -321,9 +321,9 @@ jobs:
           template: basic_success_1
       # destroy-environment commands only execute when: on_fail
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   run-migrations:
     docker:
@@ -348,11 +348,14 @@ jobs:
             cat ~/migrationresults.txt
             if ( grep "has been executed successfully" ~/migrationresults.txt ); then
             export MIGRATION_STATUS=success
+            export EXIT_STATUS=0
             else
             export MIGRATION_STATUS=fail
+            export EXIT_STATUS=1
             fi
             echo "Migration status = ${MIGRATION_STATUS}"
             curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" --request PUT --data "${MIGRATION_STATUS}" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+            exit ($EXIT_STATUS)
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -362,9 +365,9 @@ jobs:
       # destroy-environment and revert-migrations commands only execute when: on_fail
       - revert-migrations
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   deploy-frontend:
     docker:
@@ -398,9 +401,9 @@ jobs:
       # destroy-environment and revert-migrations commands only execute when: on_fail
       - revert-migrations
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   deploy-backend:
     docker:
@@ -438,9 +441,9 @@ jobs:
       # destroy-environment and revert-migrations commands only execute when: on_fail
       - revert-migrations
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   smoke-test:
     docker:
@@ -474,9 +477,9 @@ jobs:
       # destroy-environment and revert-migrations commands only execute when: on_fail
       - revert-migrations
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   cloudfront-update:
     docker:
@@ -493,8 +496,8 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --tags project="udapeoples-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --stack-name "udapeoples-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project="udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides \
               WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
@@ -506,9 +509,9 @@ jobs:
       # destroy-environment and revert-migrations commands only execute when: on_fail
       - revert-migrations
       - destroy-environment:
-          stack: "udapeoples-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
-          stack: "udapeoples-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          stack: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   cleanup:
     docker:
@@ -556,40 +559,40 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend:
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - build-backend:
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - test-frontend:
-      #     requires: [build-frontend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - test-backend:
-      #     requires: [build-backend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - scan-backend:
-      #     requires: [build-backend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
+      - build-frontend:
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - build-backend:
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - test-frontend:
+          requires: [build-frontend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - test-backend:
+          requires: [build-backend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - scan-backend:
+          requires: [build-backend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - scan-frontend:
+          requires: [build-frontend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
       - deploy-infrastructure:
-          # requires:
-          #   - test-frontend
-          #   - test-backend
-          #   - scan-frontend
-          #   - scan-backend
+          requires:
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
           context:
             - Slack
             - AWSCLI
@@ -646,12 +649,12 @@ workflows:
           context:
             - Slack
           requires:
-            # - build-frontend
-            # - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-backend
-            # - scan-frontend
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
             - deploy-infrastructure
             - configure-infrastructure
             - run-migrations
