@@ -544,40 +544,40 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend:
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - build-backend:
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - test-frontend:
-      #     requires: [build-frontend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - test-backend:
-      #     requires: [build-backend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - scan-backend:
-      #     requires: [build-backend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      #     context:
-      #       - Slack
-      #     <<: *slack-fail-post-step
+      - build-frontend:
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - build-backend:
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - test-frontend:
+          requires: [build-frontend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - test-backend:
+          requires: [build-backend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - scan-backend:
+          requires: [build-backend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+      - scan-frontend:
+          requires: [build-frontend]
+          context:
+            - Slack
+          <<: *slack-fail-post-step
       - deploy-infrastructure:
-          # requires:
-            # - test-frontend
-            # - test-backend
-            # - scan-frontend
-            # - scan-backend
+          requires:
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
           context:
             - Slack
             - AWSCLI
@@ -634,12 +634,12 @@ workflows:
           context:
             - Slack
           requires:
-            # - build-frontend
-            # - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-backend
-            # - scan-frontend
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
             - deploy-infrastructure
             - configure-infrastructure
             - run-migrations
