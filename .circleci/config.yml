@@ -66,6 +66,14 @@ commands:
               npm run migrations:revert
             fi
 
+  aws-cli-install-circleci-node:
+    description: Install the AWS-CLI Tools In CircleCI-Node image
+    steps:
+      - run:
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$HOME/awscliv2.zip"
+            cd $HOME && unzip awscliv2.zip
+            cd $HOME/aws && sudo ./install
 jobs:
   build-frontend:
     docker:
@@ -467,6 +475,7 @@ jobs:
             export OldWorkflowID=$(aws cloudformation \
                 list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                 --no-paginate --output text)
+            echo "OldWorkflowID = $OldWorkflowID"
             curl -H "Content-Type: text/plain" -H "token: ${MEMSTASH_TOKEN}" --request PUT --data "${OldWorkflowID}" https://api.memstash.io/values/OldWorkflowID
       - run:
           name: Update cloudfront distribution
@@ -489,22 +498,27 @@ jobs:
 
   cleanup:
     docker:
-      - image: alpine:3.12
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "4d:37:b7:05:9e:87:ba:d2:13:0a:db:f6:4d:14:8a:62"
+      - aws-cli-install-circleci-node
       - run:
           name: Install dependencies
           command: |
-            apk update
-            apk add --update curl jq aws-cli nodejs npm zip unzip bash
+            sudo apt install -y curl jq zip unzip
       - run:
           name: Get STACKS List, Old Workflow ID, & Remove old stacks and files
           command: |
-            bash
             export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
             export OldWorkflowID=$(curl -H "token: ${MEMSTASH_TOKEN}" \
               --request GET https://api.memstash.io/values/OldWorkflowID)
+            echo "STACKS = $STACKS"
+            echo ""
+            echo "OldWorkflowID = $OldWorkflowID"
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
